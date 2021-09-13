@@ -7,6 +7,7 @@ Created on Sat Sep 11 14:15:38 2021
 from Route import Route
 from Permutation import Permutation
 import numpy as np
+from Settings import Settings
 
 
 class BruteForce(object):
@@ -17,8 +18,15 @@ class BruteForce(object):
         self.permObj = Permutation()
         self.processor = None
         self.mgr = mgr
+        self.mgr.routeList = self.routeList
 
     def createBruteRoutes(self):
+        """
+        Creates all possible routes for (hard coded) 3 vehicles and 7 jobs where all jobs needs to be completed,
+        vehicles with no job assigned are welcome
+        
+        TODO: Enhance this method to work for n jobs and m vehicles
+        """
         self.clusters = self.__createClusters()
         for cluster in self.clusters:
             v1 = cluster[0]
@@ -47,15 +55,25 @@ class BruteForce(object):
         job_objects = self.mgr.job_objects
         vehicle_objects = self.mgr.vehicle_objects
         matrix = self.mgr.matrix
+
         for vehicle in vehicle_objects.values():
             vehicle_location = vehicle.location
             vehicle_id = vehicle.vehicle_id
             vehicle_jobs = route.routes[vehicle_id]
+            vehicle_stock = vehicle.stock
             for job_id in vehicle_jobs:
                 job = job_objects[job_id]
                 target_location = job.location_index
                 service = job.service
+                delivery = job.delivery
                 cost = matrix[vehicle_location, target_location]
+
+                if Settings.STOCK_CONSTRAINT and vehicle_stock < delivery:
+                    cost = float('inf')
+                    route.addCost(cost)
+                    break
+
+                vehicle_stock -= delivery
                 route.addCost(cost)
                 vehicle_location = target_location
 
@@ -66,7 +84,6 @@ class BruteForce(object):
             if mincost < 0 or route.cost < mincost:
                 mincost = route.cost
                 minroute = route
-
         return minroute
 
     def __createClusters(self):
@@ -75,7 +92,7 @@ class BruteForce(object):
          could be assigned to each vehicle
          I.E: [4, 1, 2] ==>  4,1 and 2 jobs will be assigned to Vehicle-1, Vehicle-2 and Vehicle-3 respectively
 
-         TODO: refactor this to execute dynamically with number of jobs and vehicles
+         TODO: Enhance this method to work for n jobs and m vehicles 
         """
         tmp = list()
         for i in reversed(range(8)):

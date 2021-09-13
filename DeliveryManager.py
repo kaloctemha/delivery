@@ -17,20 +17,50 @@ class DeliveryManager(object):
         self.job_objects = dict()
         self.vehicle_objects = dict()
         self.matrix = list()
+        self.routeList = list()
         self.build()
 
     def build(self):
-        """
-        A method for calculating the distance between the job(customer location) being processed
-        and the current location of the fleet
-        """
         with open(Settings.FILE_NAME) as input_file:
             data = json.load(input_file)
             self.__construct_jobs(data["jobs"])
             self.__construct_vehicles(data["vehicles"])
             self.matrix = data["matrix"]
             self.matrix = np.array(self.matrix)
+            print("\n\t-----------------------Jobs-----------------------")
+            print(np.array(data["jobs"]))
+            print("\n\t-----------------------Vehicles-----------------------")
+            print(np.array(data["vehicles"]))
+            print("\n\t-----------------------Matrix-----------------------")
+            print(self.matrix )
 
+    def printRoute(self, route):
+        output = dict()
+        outputRoutes = dict()
+        output["total_delivery_duration"] = route.cost
+        output["routes"] = outputRoutes
+        for v in self.vehicle_objects.values():
+            vehicleRoute = route.routes[v.vehicle_id]
+            delivery_duration = self.__get_vehicle_cost(v.location,vehicleRoute)
+            outputRoutes[str(v.vehicle_id)] = dict({"jobs": list(vehicleRoute),
+                                               "delivery_duration": delivery_duration})
+        print(output)
+        return output
+    
+    def writeToFile(self,route):
+        with open("output.txt",'w') as f:
+            f.write(str(self.printRoute(route)))
+        
+
+    def __get_vehicle_cost(self, vehicle_location, jobs):
+        vehicleCost = 0
+        for jobID in jobs:
+            job = self.job_objects[jobID]
+            target_location = job.location_index
+            vehicleCost += self.matrix[vehicle_location, target_location]
+            vehicle_location = target_location
+        return vehicleCost
+    
     def __construct_jobs(self, jobs):
         """
          Map jobs extracted from input file to our cutsom Job objects
@@ -53,24 +83,4 @@ class DeliveryManager(object):
             vCapacity = v['capacity'][0]
             vehicle = Vehicle(vID, vIndex, vCapacity)
             self.vehicle_objects[vID] = vehicle
-
-    def printRoute(self, route):
-        output = dict()
-        outputRoutes = dict()
-        output["total_delivery_duration"] = route.cost
-        output["routes"] = outputRoutes
-        for v in self.vehicle_objects.values():
-            vehicleRoute = route.routes[v.vehicle_id]
-            delivery_duration = self.__get_vehicle_cost(v.location,vehicleRoute)
-            outputRoutes[str(v.vehicle_id)] = dict({"jobs": list(vehicleRoute),
-                                               "delivery_duration": delivery_duration})
-        print(output)
-
-    def __get_vehicle_cost(self, vehicle_location, jobs):
-        vehicleCost = 0
-        for jobID in jobs:
-            job = self.job_objects[jobID]
-            target_location = job.location_index
-            vehicleCost += self.matrix[vehicle_location, target_location]
-            vehicle_location = target_location
-        return vehicleCost
+    

@@ -2,9 +2,8 @@
 """
 Created on Thu Sep  9 09:03:48 2021
 
-@author: 200461
+@author: acolak
 """
-from Settings import Settings
 
 
 class Vehicle(object):
