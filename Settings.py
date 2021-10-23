@@ -8,7 +8,7 @@ Created on Sat Sep 11 09:00:26 2021
 class Settings(object):
     FILE_NAME = "input.json"
     STOCK_CONSTRAINT =  True
-    OUTPUT_FILE = "output.txt"
+    OUTPUT_FILE = "output.json"
     
     
     def __str__(self):

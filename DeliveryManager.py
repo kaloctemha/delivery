@@ -48,7 +48,7 @@ class DeliveryManager(object):
         return output
     
     def writeToFile(self,route):
-        with open("output.txt",'w') as f:
+        with open(Settings.OUTPUT_FILE,'w') as f:
             f.write(str(self.printRoute(route)))
         
 
